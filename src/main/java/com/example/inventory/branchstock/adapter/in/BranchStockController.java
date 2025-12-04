@@ -2,6 +2,7 @@ package com.example.inventory.branchstock.adapter.in;
 
 import com.example.inventory.branchstock.dto.BranchStockRequestDTO;
 import com.example.inventory.branchstock.dto.BranchStockResponseDTO;
+import com.example.inventory.branchstock.dto.BranchStockTransferDTO;
 import com.example.inventory.branchstock.dto.BranchStockUpdateDTO;
 import com.example.inventory.branchstock.port.in.BranchStockUseCase;
 import jakarta.validation.Valid;
@@ -26,6 +27,11 @@ public class BranchStockController {
     public ResponseEntity<BranchStockResponseDTO> create(@Valid @RequestBody BranchStockRequestDTO dto) {
         BranchStockResponseDTO created = useCase.create(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping
+    public ResponseEntity<List<BranchStockResponseDTO>> listAll() {
+        return ResponseEntity.ok(useCase.listAll());
     }
 
     @GetMapping("/{stockId}")
@@ -69,5 +75,11 @@ public class BranchStockController {
     public ResponseEntity<Void> delete(@PathVariable UUID stockId) {
         useCase.delete(stockId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<BranchStockResponseDTO> transfer(@Valid @RequestBody BranchStockTransferDTO dto) {
+        BranchStockResponseDTO result = useCase.transfer(dto);
+        return ResponseEntity.ok(result);
     }
 }

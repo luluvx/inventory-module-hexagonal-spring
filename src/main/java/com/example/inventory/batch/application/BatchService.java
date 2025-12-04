@@ -5,6 +5,7 @@ import com.example.inventory.batch.domain.Batch;
 import com.example.inventory.batch.dto.*;
 import com.example.inventory.batch.port.in.BatchUseCase;
 import com.example.inventory.batch.port.out.BatchRepository;
+import com.example.inventory.branchstock.port.out.BranchStockRepository;
 import com.example.inventory.product.domain.Product;
 import com.example.inventory.product.port.out.ProductRepository;
 import org.springframework.http.HttpStatus;
@@ -23,11 +24,14 @@ public class BatchService implements BatchUseCase {
 
     private final BatchRepository repo;
     private final ProductRepository productRepo;
+    private final BranchStockRepository branchStockRepo;
     private final BatchMapper mapper;
 
-    public BatchService(BatchRepository repo, ProductRepository productRepo, BatchMapper mapper) {
+    public BatchService(BatchRepository repo, ProductRepository productRepo, 
+                        BranchStockRepository branchStockRepo, BatchMapper mapper) {
         this.repo = repo;
         this.productRepo = productRepo;
+        this.branchStockRepo = branchStockRepo;
         this.mapper = mapper;
     }
 
@@ -93,7 +97,7 @@ public class BatchService implements BatchUseCase {
     public List<BatchResponseDTO> listExpiringSoon() {
         LocalDate today = LocalDate.now();
         LocalDate warningDate = today.plusDays(30);
-        return repo.findExpiringSoon(warningDate).stream().map(this::toResponseWithProductLookup).toList();
+        return repo.findExpiringSoon(today, warningDate).stream().map(this::toResponseWithProductLookup).toList();
     }
 
     @Override
@@ -106,10 +110,13 @@ public class BatchService implements BatchUseCase {
     @Transactional(readOnly = true)
     public List<ExpiringBatchNotificationDTO> getExpiringNotifications() {
         LocalDate today = LocalDate.now();
-        LocalDate warningDate = today.plusDays(60);
+        // Obtener un rango amplio y luego filtrar por el warningDays de cada lote
+        LocalDate maxWarningDate = today.plusDays(90);
         
-        return repo.findExpiringSoon(warningDate).stream()
+        return repo.findExpiringSoon(today, maxWarningDate).stream()
                 .filter(Batch::isNotificationEnabled)
+                // Solo incluir lotes que estén dentro de su propio período de advertencia
+                .filter(Batch::isExpiringSoon)
                 .map(batch -> {
                     Product product = productRepo.findById(batch.getProductId()).orElse(null);
                     long daysUntil = ChronoUnit.DAYS.between(today, batch.getExpirationDate());
@@ -175,9 +182,15 @@ public class BatchService implements BatchUseCase {
     @Override
     @Transactional
     public void delete(UUID id) {
-        if (!repo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado con id: " + id);
+        Batch batch = repo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Lote no encontrado con id: " + id));
+        
+        // Verificar si el lote está asignado a alguna sucursal
+        if (branchStockRepo.existsByBatchId(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                "No se puede eliminar el lote '" + batch.getBatchNumber() + "' porque está asignado a una o más sucursales. Elimina primero las asignaciones.");
         }
+        
         repo.deleteById(id);
     }
 

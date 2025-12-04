@@ -12,7 +12,7 @@ public interface BatchRepository {
     Optional<Batch> findById(UUID id);
     List<Batch> findAll();
     List<Batch> findByProductId(UUID productId);
-    List<Batch> findExpiringSoon(LocalDate warningDate);
+    List<Batch> findExpiringSoon(LocalDate today, LocalDate warningDate);
     List<Batch> findExpired(LocalDate today);
     List<Batch> findByExpirationDateBetween(LocalDate from, LocalDate to);
     List<Batch> findActiveByProductId(UUID productId);

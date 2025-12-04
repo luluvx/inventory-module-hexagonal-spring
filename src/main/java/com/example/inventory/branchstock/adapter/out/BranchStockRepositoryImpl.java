@@ -33,6 +33,11 @@ public class BranchStockRepositoryImpl implements BranchStockRepository {
     }
 
     @Override
+    public List<BranchStock> findAll() {
+        return jpa.findAll().stream().map(mapper::entityToDomain).toList();
+    }
+
+    @Override
     public List<BranchStock> findByBranchId(UUID branchId) {
         return jpa.findByBranchId(branchId).stream().map(mapper::entityToDomain).toList();
     }
@@ -73,6 +78,12 @@ public class BranchStockRepositoryImpl implements BranchStockRepository {
     }
 
     @Override
+    public int getTotalQuantityByBatch(UUID batchId) {
+        return jpa.findByBatchId(batchId).stream()
+                .mapToInt(BranchStockEntity::getQuantity).sum();
+    }
+
+    @Override
     public void deleteById(UUID id) {
         jpa.deleteById(id);
     }
@@ -85,5 +96,15 @@ public class BranchStockRepositoryImpl implements BranchStockRepository {
     @Override
     public boolean existsByBranchIdAndBatchId(UUID branchId, UUID batchId) {
         return jpa.existsByBranchIdAndBatchId(branchId, batchId);
+    }
+
+    @Override
+    public boolean existsByBatchId(UUID batchId) {
+        return !jpa.findByBatchId(batchId).isEmpty();
+    }
+
+    @Override
+    public boolean existsByProductId(UUID productId) {
+        return !jpa.findByProductId(productId).isEmpty();
     }
 }

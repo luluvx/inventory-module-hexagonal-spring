@@ -1,5 +1,6 @@
 package com.example.inventory.product.application;
 
+import com.example.inventory.branchstock.port.out.BranchStockRepository;
 import com.example.inventory.product.application.mapper.ProductMapper;
 import com.example.inventory.product.domain.Product;
 import com.example.inventory.product.dto.ProductRequestDTO;
@@ -21,10 +22,12 @@ import java.util.UUID;
 public class ProductService implements ProductUseCase {
 
     private final ProductRepository repo;
+    private final BranchStockRepository branchStockRepo;
     private final ProductMapper mapper;
 
-    public ProductService(ProductRepository repo, ProductMapper mapper) {
+    public ProductService(ProductRepository repo, BranchStockRepository branchStockRepo, ProductMapper mapper) {
         this.repo = repo;
+        this.branchStockRepo = branchStockRepo;
         this.mapper = mapper;
     }
 
@@ -135,9 +138,15 @@ public class ProductService implements ProductUseCase {
     @Override
     @Transactional
     public void delete(UUID id) {
-        if (!repo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con id: " + id);
+        Product product = repo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado con id: " + id));
+        
+        // Verificar si el producto está asignado a alguna sucursal
+        if (branchStockRepo.existsByProductId(id)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, 
+                "No se puede eliminar el producto '" + product.getName() + "' porque está asignado a una o más sucursales. Elimina primero las asignaciones.");
         }
+        
         repo.deleteById(id);
     }
 }

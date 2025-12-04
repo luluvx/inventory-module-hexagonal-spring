@@ -14,4 +14,6 @@ public interface BatchJpaRepository extends JpaRepository<BatchEntity, UUID> {
     List<BatchEntity> findByActiveTrueAndExpiredFalseAndExpirationDateLessThanEqual(LocalDate warningDate);
     List<BatchEntity> findByActiveTrueAndExpirationDateLessThan(LocalDate today);
     List<BatchEntity> findByExpirationDateBetween(LocalDate from, LocalDate to);
+    // Para próximos a vencer: entre hoy y fecha de advertencia (excluyendo vencidos)
+    List<BatchEntity> findByActiveTrueAndExpiredFalseAndExpirationDateBetween(LocalDate today, LocalDate warningDate);
 }

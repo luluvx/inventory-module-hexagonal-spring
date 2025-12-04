@@ -45,8 +45,8 @@ public class BatchRepositoryImpl implements BatchRepository {
     }
 
     @Override
-    public List<Batch> findExpiringSoon(LocalDate warningDate) {
-        return jpa.findByActiveTrueAndExpiredFalseAndExpirationDateLessThanEqual(warningDate)
+    public List<Batch> findExpiringSoon(LocalDate today, LocalDate warningDate) {
+        return jpa.findByActiveTrueAndExpiredFalseAndExpirationDateBetween(today, warningDate)
                 .stream().map(mapper::entityToDomain).toList();
     }
 

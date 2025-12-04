@@ -15,6 +15,7 @@ public interface BatchMapper {
     
     @Mapping(target = "productName", ignore = true)
     @Mapping(target = "productBrand", ignore = true)
+    @Mapping(target = "expired", expression = "java(domain.isExpiredNow())")
     @Mapping(target = "expiringSoon", expression = "java(domain.isExpiringSoon())")
     BatchResponseDTO toResponseDTO(Batch domain);
     

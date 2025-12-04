@@ -69,12 +69,22 @@ public class Batch {
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 
+    /**
+     * Verifica si el lote está próximo a vencer.
+     * Retorna true solo si está dentro del período de advertencia Y no ha vencido aún.
+     */
     public boolean isExpiringSoon() {
         if (expirationDate == null) return false;
+        // Si ya venció, no está "por vencer"
+        if (isExpiredNow()) return false;
         LocalDate warningDate = expirationDate.minusDays(warningDaysBeforeExpiration);
-        return LocalDate.now().isAfter(warningDate) || LocalDate.now().isEqual(warningDate);
+        LocalDate today = LocalDate.now();
+        return today.isAfter(warningDate) || today.isEqual(warningDate);
     }
 
+    /**
+     * Verifica si el lote ya venció (fecha de vencimiento pasó).
+     */
     public boolean isExpiredNow() {
         if (expirationDate == null) return false;
         return LocalDate.now().isAfter(expirationDate);
