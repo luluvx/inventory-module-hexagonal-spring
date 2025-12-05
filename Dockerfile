@@ -43,13 +43,13 @@ USER appuser
 # Variables de entorno configurables por sucursal
 ENV BRANCH_SLUG=""
 ENV SERVER_PORT=8080
-ENV SPRING_DATASOURCE_URL="jdbc:postgresql://host.docker.internal:5432/inventario"
+ENV SPRING_DATASOURCE_URL="jdbc:postgresql://postgres-db:5432/inventario"
 ENV SPRING_DATASOURCE_USERNAME="postgres"
 ENV SPRING_DATASOURCE_PASSWORD="root"
 ENV SPRING_JPA_HIBERNATE_DDL_AUTO="update"
 
 # Puerto expuesto
-EXPOSE ${SERVER_PORT}
+EXPOSE 8080
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
